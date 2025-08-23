@@ -1,0 +1,54 @@
+{
+    "hello": {
+        "type": "text",
+        "content": [
+            "Hi there!",
+            "Hello! How can I help?",
+            "Hey, what's up?"
+        ]
+    },
+    "bye": {
+        "type": "text",
+        "content": [
+            "Goodbye!",
+            "See you later!",
+            "Take care!"
+        ]
+    },
+    "what do you mean": {
+        "type": "text",
+        "content": [
+            "I mean nothing"
+        ]
+    },
+    "aap hello bol sakte ho": {
+        "type": "text",
+        "content": [
+            "haan"
+        ]
+    },
+    "khana khaya": {
+        "type": "text",
+        "content": [
+            "ji kha liya"
+        ]
+    },
+    "neend nahi aa rhi hai": {
+        "type": "text",
+        "content": [
+            "gana sun lo"
+        ]
+    },
+    "excercise kiya karo": {
+        "type": "text",
+        "content": [
+            "hanji daily"
+        ]
+    },
+    "blunder*": {
+        "type": "text",
+        "content": [
+            "no blunders"
+        ]
+    }
+}

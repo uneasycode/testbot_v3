@@ -1,0 +1,384 @@
+# edit_response_updated.html - Updated HTML template with multiple-images support
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if is_new %}Add{% else %}Edit{% endif %} Response - Telegram Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
+        .form-control, .form-select { border-radius: 8px; }
+        .media-preview { max-width: 200px; max-height: 200px; border-radius: 8px; margin-top: 10px; }
+        .multiple-images-container { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
+        .image-checkbox { margin: 5px 0; }
+        .selected-images-preview { margin-top: 10px; }
+        .selected-images-preview img { width: 60px; height: 60px; object-fit: cover; margin: 2px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">
+                            <i class="fas fa-{% if is_new %}plus{% else %}edit{% endif %} me-2"></i>
+                            {% if is_new %}Add New Response{% else %}Edit Response: "{{ keyword }}"{% endif %}
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" id="responseForm">
+                            {% if is_new %}
+                            <div class="mb-3">
+                                <label for="keyword" class="form-label">
+                                    <i class="fas fa-key text-primary me-2"></i>Keyword/Trigger
+                                </label>
+                                <input type="text" class="form-control" id="keyword" name="keyword" 
+                                       placeholder="Enter trigger keyword..." required>
+                                <div class="form-text">This is what users will type to trigger this response</div>
+                            </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <label for="type" class="form-label">
+                                    <i class="fas fa-list text-primary me-2"></i>Response Type
+                                </label>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="type" id="type_text" value="text" 
+                                                   {% if not is_new and response_data.type == 'text' %}checked{% endif %} 
+                                                   onchange="toggleResponseFields()" required>
+                                            <label class="form-check-label" for="type_text">
+                                                <i class="fas fa-comment me-1"></i>Text
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="type" id="type_image" value="image" 
+                                                   {% if not is_new and response_data.type == 'image' %}checked{% endif %} 
+                                                   onchange="toggleResponseFields()">
+                                            <label class="form-check-label" for="type_image">
+                                                <i class="fas fa-image me-1"></i>Single Image
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="type" id="type_multiple_images" value="multiple-images" 
+                                                   {% if not is_new and response_data.type == 'multiple-images' %}checked{% endif %} 
+                                                   onchange="toggleResponseFields()">
+                                            <label class="form-check-label" for="type_multiple_images">
+                                                <i class="fas fa-images me-1"></i>Multiple Images
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="type" id="type_audio" value="audio" 
+                                                   {% if not is_new and response_data.type == 'audio' %}checked{% endif %} 
+                                                   onchange="toggleResponseFields()">
+                                            <label class="form-check-label" for="type_audio">
+                                                <i class="fas fa-music me-1"></i>Audio
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Text Response Fields -->
+                            <div id="textFields" class="response-fields" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="content" class="form-label">
+                                        <i class="fas fa-comment text-primary me-2"></i>Text Content
+                                    </label>
+                                    <textarea class="form-control" id="content" name="content" rows="4" 
+                                              placeholder="Enter response text (one response per line for multiple options)...">{% if not is_new and response_data.type == 'text' %}{{ response_data.content | join('\n') }}{% endif %}</textarea>
+                                    <div class="form-text">Add multiple responses (one per line) for variety</div>
+                                </div>
+                            </div>
+
+                            <!-- Single Image Response Fields -->
+                            <div id="imageFields" class="response-fields" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="image_file" class="form-label">
+                                        <i class="fas fa-image text-primary me-2"></i>Select Image
+                                    </label>
+                                    <select class="form-select" id="image_file" name="image_file">
+                                        <option value="">Choose an uploaded image...</option>
+                                        {% for image in images %}
+                                            <option value="{{ image }}" 
+                                                {% if not is_new and response_data.type == 'image' and response_data.content == image %}selected{% endif %}>
+                                                {{ image }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">
+                                        Upload images first using the <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">Upload Media</button> button
+                                    </div>
+                                    <div id="imagePreview"></div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="caption" class="form-label">
+                                        <i class="fas fa-text-width text-primary me-2"></i>Image Caption (Optional)
+                                    </label>
+                                    <input type="text" class="form-control" id="caption" name="caption" 
+                                           placeholder="Enter image caption..." 
+                                           value="{% if not is_new and response_data.type == 'image' %}{{ response_data.caption or '' }}{% endif %}">
+                                </div>
+                            </div>
+
+                            <!-- Multiple Images Response Fields -->
+                            <div id="multipleImagesFields" class="response-fields" style="display: none;">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-images text-primary me-2"></i>Select Multiple Images
+                                    </label>
+                                    <div class="multiple-images-container">
+                                        {% for image in images %}
+                                            <div class="image-checkbox">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="multiple_image_files" 
+                                                           value="{{ image }}" id="multi_img_{{ loop.index }}"
+                                                           {% if not is_new and response_data.type == 'multiple-images' and image in response_data.content %}checked{% endif %}
+                                                           onchange="updateMultipleImagesPreview()">
+                                                    <label class="form-check-label" for="multi_img_{{ loop.index }}">
+                                                        {{ image }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                        {% if not images %}
+                                            <p class="text-muted">No images available. Upload images first.</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-text">
+                                        Select multiple images. They will be sent in the order selected.
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">Upload More Images</button>
+                                    </div>
+                                    <div id="multipleImagesPreview" class="selected-images-preview"></div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="multiple_caption" class="form-label">
+                                        <i class="fas fa-text-width text-primary me-2"></i>Caption for Images (Optional)
+                                    </label>
+                                    <input type="text" class="form-control" id="multiple_caption" name="caption" 
+                                           placeholder="Enter caption for all images..." 
+                                           value="{% if not is_new and response_data.type == 'multiple-images' %}{{ response_data.caption or '' }}{% endif %}">
+                                    <div class="form-text">This caption will be shown with the first image</div>
+                                </div>
+                            </div>
+
+                            <!-- Audio Response Fields -->
+                            <div id="audioFields" class="response-fields" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="audio_file" class="form-label">
+                                        <i class="fas fa-music text-primary me-2"></i>Select Audio
+                                    </label>
+                                    <select class="form-select" id="audio_file" name="audio_file">
+                                        <option value="">Choose an uploaded audio file...</option>
+                                        {% for audio_file in audio %}
+                                            <option value="{{ audio_file }}" 
+                                                {% if not is_new and response_data.type == 'audio' and response_data.content == audio_file %}selected{% endif %}>
+                                                {{ audio_file }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">
+                                        Upload audio first using the <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">Upload Media</button> button
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>{% if is_new %}Add Response{% else %}Update Response{% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Media Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload Media File</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="mediaType" class="form-label">Media Type</label>
+                            <select class="form-select" id="mediaType" name="type" required>
+                                <option value="">Select type...</option>
+                                <option value="image">Image</option>
+                                <option value="audio">Audio</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="mediaFile" class="form-label">Choose File</label>
+                            <input type="file" class="form-control" id="mediaFile" name="file" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="uploadMedia()">Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleResponseFields() {
+            const responseType = document.querySelector('input[name="type"]:checked')?.value;
+            const textFields = document.getElementById('textFields');
+            const imageFields = document.getElementById('imageFields');
+            const multipleImagesFields = document.getElementById('multipleImagesFields');
+            const audioFields = document.getElementById('audioFields');
+            
+            // Hide all fields
+            textFields.style.display = 'none';
+            imageFields.style.display = 'none';  
+            multipleImagesFields.style.display = 'none';
+            audioFields.style.display = 'none';
+            
+            // Show relevant fields
+            if (responseType === 'text') {
+                textFields.style.display = 'block';
+            } else if (responseType === 'image') {
+                imageFields.style.display = 'block';
+            } else if (responseType === 'multiple-images') {
+                multipleImagesFields.style.display = 'block';
+                updateMultipleImagesPreview();
+            } else if (responseType === 'audio') {
+                audioFields.style.display = 'block';
+            }
+        }
+
+        function updateMultipleImagesPreview() {
+            const checkboxes = document.querySelectorAll('input[name="multiple_image_files"]:checked');
+            const previewDiv = document.getElementById('multipleImagesPreview');
+            
+            if (checkboxes.length > 0) {
+                let previewHtml = '<h6>Selected Images (' + checkboxes.length + '):</h6>';
+                checkboxes.forEach(function(checkbox) {
+                    previewHtml += '<img src="/media/images/' + checkbox.value + '" alt="' + checkbox.value + '" class="img-thumbnail me-1" style="width: 60px; height: 60px; object-fit: cover;">';
+                });
+                previewDiv.innerHTML = previewHtml;
+            } else {
+                previewDiv.innerHTML = '';
+            }
+        }
+
+        // Initialize form on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleResponseFields();
+            
+            // Add image preview functionality for single image
+            document.getElementById('image_file').addEventListener('change', function() {
+                const selectedImage = this.value;
+                const previewDiv = document.getElementById('imagePreview');
+                
+                if (selectedImage) {
+                    previewDiv.innerHTML = `
+                        <img src="/media/images/${selectedImage}" 
+                             alt="${selectedImage}" 
+                             class="media-preview img-thumbnail mt-2">
+                        <p class="text-muted small mt-1">Preview: ${selectedImage}</p>
+                    `;
+                } else {
+                    previewDiv.innerHTML = '';
+                }
+            });
+
+            // Initialize multiple images preview if editing
+            if (document.querySelector('input[name="type"][value="multiple-images"]')?.checked) {
+                updateMultipleImagesPreview();
+            }
+        });
+
+        function uploadMedia() {
+            const form = document.getElementById('uploadForm');
+            const formData = new FormData(form);
+            
+            fetch('/upload/media', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('File uploaded successfully!');
+                    // Reload the page to update dropdowns
+                    window.location.reload();
+                } else {
+                    alert('Upload failed: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                alert('Upload failed: ' + error.message);
+            });
+        }
+
+        // Form validation before submit
+        document.getElementById('responseForm').addEventListener('submit', function(e) {
+            const responseType = document.querySelector('input[name="type"]:checked')?.value;
+            
+            if (!responseType) {
+                e.preventDefault();
+                alert('Please select a response type.');
+                return false;
+            }
+            
+            if (responseType === 'image') {
+                const selectedImage = document.getElementById('image_file').value;
+                if (!selectedImage) {
+                    e.preventDefault();
+                    alert('Please select an image file.');
+                    return false;
+                }
+            } else if (responseType === 'multiple-images') {
+                const selectedImages = document.querySelectorAll('input[name="multiple_image_files"]:checked');
+                if (selectedImages.length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one image file.');
+                    return false;
+                }
+            } else if (responseType === 'audio') {
+                const selectedAudio = document.getElementById('audio_file').value;
+                if (!selectedAudio) {
+                    e.preventDefault();
+                    alert('Please select an audio file.');
+                    return false;
+                }
+            } else if (responseType === 'text') {
+                const textContent = document.getElementById('content').value.trim();
+                if (!textContent) {
+                    e.preventDefault();
+                    alert('Please enter text content.');
+                    return false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

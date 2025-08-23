@@ -1,0 +1,78 @@
+# responses_example.json - Example responses.json with multiple-images support
+
+{
+    "hello": {
+        "type": "text",
+        "content": [
+            "Hi there!",
+            "Hello! How can I help?",
+            "Hey, what's up?"
+        ]
+    },
+    "bye": {
+        "type": "text",
+        "content": [
+            "Goodbye!",
+            "See you later!",
+            "Take care!"
+        ]
+    },
+    "show photo": {
+        "type": "image",
+        "content": "single_photo.jpg",
+        "caption": "Here's the photo you requested!"
+    },
+    "show gallery": {
+        "type": "multiple-images",
+        "content": [
+            "photo1.jpg",
+            "photo2.jpg", 
+            "photo3.jpg",
+            "photo4.jpg"
+        ],
+        "caption": "Here's our photo gallery!"
+    },
+    "portfolio": {
+        "type": "multiple-images",
+        "content": [
+            "design1.png",
+            "design2.png",
+            "design3.png"
+        ],
+        "caption": "Check out my design portfolio"
+    },
+    "play music": {
+        "type": "audio",
+        "content": "song.mp3"
+    },
+    "aap hello bol sakte ho": {
+        "type": "text",
+        "content": [
+            "haan"
+        ]
+    },
+    "khana khaya": {
+        "type": "text",
+        "content": [
+            "ji kha liya"
+        ]
+    },
+    "product images": {
+        "type": "multiple-images",
+        "content": [
+            "product_front.jpg",
+            "product_back.jpg",
+            "product_side.jpg",
+            "product_detail.jpg"
+        ],
+        "caption": "Here are all the product images you requested"
+    },
+    "before after": {
+        "type": "multiple-images", 
+        "content": [
+            "before.jpg",
+            "after.jpg"
+        ],
+        "caption": "Before and after comparison"
+    }
+}

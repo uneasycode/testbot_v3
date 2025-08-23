@@ -1,0 +1,130 @@
+{
+    "hello": {
+        "type": "text",
+        "content": [
+            "Hi there!",
+            "Hello! How can I help?",
+            "Hey, what's up?"
+        ]
+    },
+    "Bye": {
+        "type": "text",
+        "content": "Goodbye!",
+        "name": 1888163481
+    },
+    "Hello": {
+        "type": "text",
+        "content": "Hey, what's up?"
+    },
+    "What do you mean": {
+        "type": "text",
+        "content": "I mean nothing",
+        "name": 1888163481
+    },
+    "Aap hello bol sakte ho": {
+        "type": "text",
+        "content": "haan",
+        "name": 1888163481
+    },
+    "Hi": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Kya baat hai": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Baat kyu nahi karte": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Ye baat": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Are you": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Are you here": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Who are you": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Help me": {
+        "type": "text",
+        "content": "Hi there!",
+        "name": 1888163481
+    },
+    "Jjene": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Agla paagal ho rakha hai": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Aap kya kar rhe ho?": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Kuch toh reply do bhai": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "Are you crazy": {
+        "type": "text",
+        "content": "",
+        "name": 1888163481
+    },
+    "What about you": {
+        "type": "text",
+        "content": "I mean nothing"
+    },
+    "Arre bhai naam kya hai aapka?": {
+        "type": "text",
+        "content": ""
+    },
+    "Tum theek ho": {
+        "type": "text",
+        "content": ""
+    },
+    "Blunder ho gaya": {
+        "type": "text",
+        "content": "no blunders"
+    },
+    "Shabaash": {
+        "type": "text",
+        "content": ""
+    },
+    "Jebsjndnd": {
+        "type": "text",
+        "content": ""
+    },
+    "Trying to understand this better": {
+        "type": "text",
+        "content": ""
+    },
+    "Abhi toh jugaad se theek karna padega": {
+        "type": "text",
+        "content": ""
+    },
+    "Test response": {
+        "type": "text",
+        "content": "lab-topology.drawio.png"
+    }
+}

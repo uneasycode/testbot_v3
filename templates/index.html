@@ -1,0 +1,369 @@
+# index_updated.html - Updated dashboard with multiple-images support
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot Manager - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
+        .response-type-badge { font-size: 0.75rem; }
+        .response-preview { max-height: 100px; overflow: hidden; }
+        .multiple-images-count { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h2 class="mb-0">
+                                <i class="fas fa-robot me-2"></i>Telegram Bot Manager
+                            </h2>
+                            <div>
+                                <span class="badge bg-light text-dark me-2">
+                                    <i class="fas fa-circle text-success me-1"></i>Bot Status: Active
+                                </span>
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-comment-dots me-1"></i>{{ responses|length }} Responses
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="mb-0">
+                                    <i class="fas fa-info-circle text-primary me-2"></i>
+                                    Manage your Telegram bot responses, media files, and monitor conversations.
+                                    <strong>Now supports multiple images per response!</strong>
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <a href="{{ url_for('add_response_form') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Add New Response
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-comment-dots fa-2x text-primary mb-2"></i>
+                        <h4>{{ responses|length }}</h4>
+                        <p class="text-muted mb-0">Total Responses</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-images fa-2x text-success mb-2"></i>
+                        <h4>{{ images|length }}</h4>
+                        <p class="text-muted mb-0">Image Files</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-music fa-2x text-warning mb-2"></i>
+                        <h4>{{ audio|length }}</h4>
+                        <p class="text-muted mb-0">Audio Files</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-layer-group fa-2x text-info mb-2"></i>
+                        <h4>
+                            {% set multiple_images_count = responses.values() | selectattr("type", "equalto", "multiple-images") | list | length %}
+                            {{ multiple_images_count }}
+                        </h4>
+                        <p class="text-muted mb-0">Multi-Image Responses</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show">
+                                <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Responses Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>Bot Responses
+                            </h5>
+                            <div>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="location.reload()">
+                                    <i class="fas fa-sync me-1"></i>Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if responses %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="25%">Keyword</th>
+                                        <th width="15%">Type</th>
+                                        <th width="45%">Content Preview</th>
+                                        <th width="15%">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for keyword, response in responses.items() %}
+                                    <tr>
+                                        <td>
+                                            <code class="text-dark">{{ keyword }}</code>
+                                        </td>
+                                        <td>
+                                            {% if response.type == 'text' %}
+                                                <span class="badge bg-primary response-type-badge">
+                                                    <i class="fas fa-comment me-1"></i>Text
+                                                </span>
+                                            {% elif response.type == 'image' %}
+                                                <span class="badge bg-success response-type-badge">
+                                                    <i class="fas fa-image me-1"></i>Image
+                                                </span>
+                                            {% elif response.type == 'multiple-images' %}
+                                                <span class="badge bg-info response-type-badge">
+                                                    <i class="fas fa-images me-1"></i>Multi-Images
+                                                    <span class="multiple-images-count">{{ response.content|length }}</span>
+                                                </span>
+                                            {% elif response.type == 'audio' %}
+                                                <span class="badge bg-warning response-type-badge">
+                                                    <i class="fas fa-music me-1"></i>Audio
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="response-preview">
+                                                {% if response.type == 'text' %}
+                                                    {% if response.content is iterable and response.content is not string %}
+                                                        {% for item in response.content[:2] %}
+                                                            <span class="badge bg-light text-dark me-1">{{ item[:30] }}{% if item|length > 30 %}...{% endif %}</span>
+                                                        {% endfor %}
+                                                        {% if response.content|length > 2 %}
+                                                            <span class="text-muted">+{{ response.content|length - 2 }} more</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="text-truncate">{{ response.content }}</span>
+                                                    {% endif %}
+                                                    
+                                                {% elif response.type == 'image' %}
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-file-image text-success me-2"></i>
+                                                        <span>{{ response.content }}</span>
+                                                        {% if response.caption %}
+                                                            <small class="text-muted ms-2">("{{ response.caption[:20] }}{% if response.caption|length > 20 %}...{% endif %}")</small>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                {% elif response.type == 'multiple-images' %}
+                                                    <div class="d-flex align-items-center flex-wrap">
+                                                        <i class="fas fa-images text-info me-2"></i>
+                                                        <div>
+                                                            <strong>{{ response.content|length }} images:</strong>
+                                                            <div class="small text-muted">
+                                                                {% for image in response.content[:3] %}
+                                                                    <span class="badge bg-light text-dark me-1">{{ image }}</span>
+                                                                {% endfor %}
+                                                                {% if response.content|length > 3 %}
+                                                                    <span class="text-muted">+{{ response.content|length - 3 }} more</span>
+                                                                {% endif %}
+                                                            </div>
+                                                            {% if response.caption %}
+                                                                <small class="text-muted">Caption: "{{ response.caption[:30] }}{% if response.caption|length > 30 %}...{% endif %}"</small>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                {% elif response.type == 'audio' %}
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-file-audio text-warning me-2"></i>
+                                                        <span>{{ response.content }}</span>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('edit_response', keyword=keyword) }}" 
+                                                   class="btn btn-outline-primary" title="Edit Response">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-danger" 
+                                                        onclick="deleteResponse('{{ keyword }}')" title="Delete Response">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-robot fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No responses configured yet</h5>
+                            <p class="text-muted">Start by adding your first bot response</p>
+                            <a href="{{ url_for('add_response_form') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add First Response
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Media Files Section -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-images text-success me-2"></i>Available Images ({{ images|length }})
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if images %}
+                            <div class="row g-2">
+                                {% for image in images[:8] %}
+                                <div class="col-3">
+                                    <div class="text-center">
+                                        <i class="fas fa-file-image text-success"></i>
+                                        <div class="small text-truncate">{{ image }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                {% if images|length > 8 %}
+                                <div class="col-12">
+                                    <small class="text-muted">... and {{ images|length - 8 }} more images</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">No images uploaded yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-music text-warning me-2"></i>Available Audio ({{ audio|length }})
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if audio %}
+                            <div class="row g-2">
+                                {% for audio_file in audio[:8] %}
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <i class="fas fa-file-audio text-warning"></i>
+                                        <div class="small text-truncate">{{ audio_file }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                {% if audio|length > 8 %}
+                                <div class="col-12">
+                                    <small class="text-muted">... and {{ audio|length - 8 }} more audio files</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">No audio files uploaded yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the response for "<span id="deleteKeyword"></span>"?</p>
+                    <p class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteForm" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Delete Response
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function deleteResponse(keyword) {
+            document.getElementById('deleteKeyword').textContent = keyword;
+            document.getElementById('deleteForm').action = '/delete/' + encodeURIComponent(keyword);
+            
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        }
+    </script>
+</body>
+</html>
