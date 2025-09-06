@@ -12,11 +12,12 @@ import logging
 import asyncio
 from flask import Flask, render_template, request, jsonify, flash, redirect, url_for
 from werkzeug.utils import secure_filename
-from bot_updated import TelegramBot
+from bot import TelegramBot
 from config import (
     SECRET_KEY, DEBUG, RESPONSES_FILE,
-    IMAGES_DIR, AUDIO_DIR
+    IMAGES_DIR, AUDIO_DIR, NLP_CONFIG_FILE
 )
+from learning_module import ConversationLearner
 
 # Configure logging
 logging.basicConfig(
@@ -439,28 +440,46 @@ def delete_response_route(keyword):
     except FileNotFoundError:
         flash("Responses file not found", "error")
         return redirect(url_for('index'))
-    
+
     if keyword not in responses:
         flash(f"Keyword '{keyword}' not found", "error")
         return redirect(url_for('index'))
-    
+
     # Delete response
     del responses[keyword]
-    
+
     # Save updated responses
     try:
         with open(RESPONSES_FILE, 'w', encoding='utf-8') as f:
             json.dump(responses, f, indent=4)
-        
+
         # Update bot's responses
         bot.load_responses()
-        
+
         flash(f"Response for '{keyword}' deleted successfully", "success")
         return redirect(url_for('index'))
     except Exception as e:
         logger.error(f"Error deleting response: {e}")
         flash("Failed to delete response", "error")
         return redirect(url_for('index'))
+
+@app.route('/nlp-config')
+def nlp_config_page():
+    """Render the NLP configuration page"""
+    logger.info("We are in app.route /nlp-config")
+    return render_template('nlp_config.html')
+
+@app.route('/learn-responses')
+def learn_responses_page():
+    """Render the learn responses page"""
+    logger.info("We are in app.route /learn-responses")
+    return render_template('learn_responses.html')
+
+@app.route('/review-responses')
+def review_responses():
+    """Render the review responses page"""
+    logger.info("We are in app.route /review-responses")
+    return render_template('review_responses.html')
 
 @app.route('/api/media', methods=['GET'])
 def get_media():
@@ -524,7 +543,7 @@ def start_bot_api():
 
     if bot_running:
         return jsonify({"message": "Bot is already running"}), 400
-    
+
     try:
         bot_thread = threading.Thread(target=start_bot_thread)
         bot_thread.daemon = True
@@ -534,6 +553,296 @@ def start_bot_api():
     except Exception as e:
         logger.error(f"Error starting bot: {e}")
         return jsonify({"error": f"Failed to start bot: {str(e)}"}), 500
+
+@app.route('/api/nlp/config', methods=['GET'])
+def get_nlp_config():
+    """API endpoint to get NLP configuration"""
+    logger.info("We are in app.route /api/nlp/config GET")
+    try:
+        with open(NLP_CONFIG_FILE, 'r', encoding='utf-8') as f:
+            nlp_config = json.load(f)
+        return jsonify(nlp_config)
+    except FileNotFoundError:
+        return jsonify({"error": "NLP config file not found"}), 404
+
+@app.route('/api/nlp/config', methods=['POST'])
+def update_nlp_config():
+    """API endpoint to update NLP configuration"""
+    logger.info("We are in app.route /api/nlp/config POST")
+    data = request.json
+
+    if not data:
+        return jsonify({"error": "Invalid data"}), 400
+
+    try:
+        with open(NLP_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4)
+
+        # Reload NLP processor
+        bot.nlp.initialize_nlp_tools()
+
+        return jsonify({"success": True, "message": "NLP config updated successfully"})
+    except Exception as e:
+        logger.error(f"Error updating NLP config: {e}")
+        return jsonify({"error": "Failed to update NLP config"}), 500
+
+@app.route('/api/nlp/typos', methods=['POST'])
+def update_typos():
+    """API endpoint to update common typos"""
+    logger.info("We are in app.route /api/nlp/typos POST")
+    data = request.json
+
+    if not data or 'typos' not in data:
+        return jsonify({"error": "Invalid data"}), 400
+
+    try:
+        with open(NLP_CONFIG_FILE, 'r', encoding='utf-8') as f:
+            nlp_config = json.load(f)
+    except FileNotFoundError:
+        nlp_config = {"common_typos": {}, "stop_words": [], "phonetic_mappings": {}}
+
+    nlp_config['common_typos'] = data['typos']
+
+    try:
+        with open(NLP_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(nlp_config, f, indent=4)
+
+        # Reload NLP processor
+        bot.nlp.initialize_nlp_tools()
+
+        return jsonify({"success": True, "message": "Typos updated successfully"})
+    except Exception as e:
+        logger.error(f"Error updating typos: {e}")
+        return jsonify({"error": "Failed to update typos"}), 500
+
+@app.route('/api/nlp/stopwords', methods=['POST'])
+def update_stopwords():
+    """API endpoint to update stopwords"""
+    logger.info("We are in app.route /api/nlp/stopwords POST")
+    data = request.json
+
+    if not data or 'stop_words' not in data:
+        return jsonify({"error": "Invalid data"}), 400
+
+    try:
+        with open(NLP_CONFIG_FILE, 'r', encoding='utf-8') as f:
+            nlp_config = json.load(f)
+    except FileNotFoundError:
+        nlp_config = {"common_typos": {}, "stop_words": [], "phonetic_mappings": {}}
+
+    nlp_config['stop_words'] = data['stop_words']
+
+    try:
+        with open(NLP_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(nlp_config, f, indent=4)
+
+        # Reload NLP processor
+        bot.nlp.initialize_nlp_tools()
+
+        return jsonify({"success": True, "message": "Stopwords updated successfully"})
+    except Exception as e:
+        logger.error(f"Error updating stopwords: {e}")
+        return jsonify({"error": "Failed to update stopwords"}), 500
+
+@app.route('/api/nlp/phonetics', methods=['POST'])
+def update_phonetics():
+    """API endpoint to update phonetic mappings"""
+    logger.info("We are in app.route /api/nlp/phonetics POST")
+    data = request.json
+
+    if not data or 'phonetic_mappings' not in data:
+        return jsonify({"error": "Invalid data"}), 400
+
+    try:
+        with open(NLP_CONFIG_FILE, 'r', encoding='utf-8') as f:
+            nlp_config = json.load(f)
+    except FileNotFoundError:
+        nlp_config = {"common_typos": {}, "stop_words": [], "phonetic_mappings": {}}
+
+    nlp_config['phonetic_mappings'] = data['phonetic_mappings']
+
+    try:
+        with open(NLP_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(nlp_config, f, indent=4)
+
+        # Reload NLP processor
+        bot.nlp.initialize_nlp_tools()
+
+        return jsonify({"success": True, "message": "Phonetic mappings updated successfully"})
+    except Exception as e:
+        logger.error(f"Error updating phonetic mappings: {e}")
+        return jsonify({"error": "Failed to update phonetic mappings"}), 500
+
+@app.route('/api/learning/stats', methods=['GET'])
+def get_learning_stats():
+    """API endpoint to get learning statistics"""
+    logger.info("We are in app.route /api/learning/stats GET")
+
+    try:
+        with open('conversation.json', 'r', encoding='utf-8') as f:
+            conversations = json.load(f)
+    except FileNotFoundError:
+        return jsonify({"total": 0, "answered": 0, "unanswered": 0, "learned": 0})
+
+    total = len(conversations)
+    answered = 0
+    unanswered = 0
+
+    for user_input, response_data in conversations.items():
+        if isinstance(response_data, dict) and response_data.get('content'):
+            content = response_data['content']
+            # Handle both string and list content types
+            if isinstance(content, list):
+                has_content = bool(content and any(item.strip() for item in content if isinstance(item, str)))
+            else:
+                has_content = bool(content and content.strip())
+
+            if has_content:
+                answered += 1
+            else:
+                unanswered += 1
+        else:
+            unanswered += 1
+
+    # Check if responses_temp.json exists and count learned responses
+    learned = 0
+    try:
+        with open('responses_temp.json', 'r', encoding='utf-8') as f:
+            temp_responses = json.load(f)
+            learned = len(temp_responses)
+    except FileNotFoundError:
+        learned = 0
+
+    return jsonify({
+        "total": total,
+        "answered": answered,
+        "unanswered": unanswered,
+        "learned": learned
+    })
+
+@app.route('/api/conversations/preview', methods=['GET'])
+def get_conversations_preview():
+    """API endpoint to get conversations preview"""
+    logger.info("We are in app.route /api/conversations/preview GET")
+
+    try:
+        with open('conversation.json', 'r', encoding='utf-8') as f:
+            conversations = json.load(f)
+    except FileNotFoundError:
+        return jsonify({"conversations": []})
+
+    preview = []
+    for user_input, response_data in list(conversations.items())[:10]:  # Limit to 10
+        if isinstance(response_data, dict):
+            content = response_data.get('content', '')
+            # Handle both string and list content types
+            if isinstance(content, list):
+                has_response = bool(content and any(item.strip() for item in content if isinstance(item, str)))
+            else:
+                has_response = bool(content and content.strip())
+            preview.append({
+                "input": user_input,
+                "response": response_data if has_response else {"content": ""},
+                "has_response": has_response
+            })
+
+    return jsonify({"conversations": preview})
+
+@app.route('/api/learning/start', methods=['POST'])
+def start_learning():
+    """API endpoint to start the learning process"""
+    logger.info("We are in app.route /api/learning/start POST")
+
+    try:
+        learner = ConversationLearner('conversation.json', 'responses_temp.json')
+        learned_responses = learner.learn_from_conversations()
+
+        return jsonify({
+            "success": True,
+            "learned_count": len(learned_responses),
+            "total_conversations": len(learner.conversations),
+            "unanswered_count": sum(1 for resp in learned_responses.values()
+                                  if resp.get('source') == 'unanswered_suggestion')
+        })
+    except Exception as e:
+        logger.error(f"Error during learning: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/responses/learned', methods=['GET'])
+def get_learned_responses():
+    """API endpoint to get learned responses"""
+    logger.info("We are in app.route /api/responses/learned GET")
+
+    try:
+        with open('responses_temp.json', 'r', encoding='utf-8') as f:
+            learned_responses = json.load(f)
+        return jsonify({"responses": learned_responses})
+    except FileNotFoundError:
+        return jsonify({"responses": {}})
+    except Exception as e:
+        logger.error(f"Error loading learned responses: {e}")
+        return jsonify({"error": "Failed to load learned responses"}), 500
+
+@app.route('/api/responses/add-selected', methods=['POST'])
+def add_selected_responses():
+    """API endpoint to add selected responses to final responses"""
+    logger.info("We are in app.route /api/responses/add-selected POST")
+    data = request.json
+
+    if not data or 'keywords' not in data:
+        return jsonify({"error": "Invalid data"}), 400
+
+    keywords = data['keywords']
+    if not isinstance(keywords, list):
+        return jsonify({"error": "Keywords must be a list"}), 400
+
+    try:
+        # Load learned responses
+        with open('responses_temp.json', 'r', encoding='utf-8') as f:
+            learned_responses = json.load(f)
+    except FileNotFoundError:
+        return jsonify({"error": "No learned responses found"}), 404
+
+    # Load current final responses
+    try:
+        with open(RESPONSES_FILE, 'r', encoding='utf-8') as f:
+            final_responses = json.load(f)
+    except FileNotFoundError:
+        final_responses = {}
+
+    added_count = 0
+    for keyword in keywords:
+        if keyword in learned_responses:
+            # Clean the response data for final storage
+            response_data = learned_responses[keyword].copy()
+            # Remove learning-specific fields
+            response_data.pop('confidence', None)
+            response_data.pop('source', None)
+            response_data.pop('similar_inputs', None)
+            response_data.pop('needs_review', None)
+
+            final_responses[keyword] = response_data
+            added_count += 1
+
+    if added_count > 0:
+        # Save updated final responses
+        try:
+            with open(RESPONSES_FILE, 'w', encoding='utf-8') as f:
+                json.dump(final_responses, f, indent=4)
+
+            # Update bot's responses
+            bot.load_responses()
+
+            return jsonify({
+                "success": True,
+                "added_count": added_count,
+                "message": f"Successfully added {added_count} responses to bot"
+            })
+        except Exception as e:
+            logger.error(f"Error saving final responses: {e}")
+            return jsonify({"error": "Failed to save responses"}), 500
+    else:
+        return jsonify({"success": True, "added_count": 0, "message": "No responses were added"})
 
 if __name__ == '__main__':
     # Start the bot in a separate thread

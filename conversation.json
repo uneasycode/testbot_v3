@@ -9,8 +9,7 @@
     },
     "Bye": {
         "type": "text",
-        "content": "Goodbye!",
-        "name": 1888163481
+        "content": "Goodbye!"
     },
     "Hello": {
         "type": "text",
@@ -18,78 +17,63 @@
     },
     "What do you mean": {
         "type": "text",
-        "content": "I mean nothing",
-        "name": 1888163481
+        "content": "I mean nothing"
     },
     "Aap hello bol sakte ho": {
         "type": "text",
-        "content": "haan",
-        "name": 1888163481
+        "content": "haan"
     },
     "Hi": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Kya baat hai": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Baat kyu nahi karte": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Ye baat": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Are you": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Are you here": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Who are you": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Help me": {
         "type": "text",
-        "content": "Hi there!",
-        "name": 1888163481
+        "content": "Hi there!"
     },
     "Jjene": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Agla paagal ho rakha hai": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Aap kya kar rhe ho?": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Kuch toh reply do bhai": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "Are you crazy": {
         "type": "text",
-        "content": "",
-        "name": 1888163481
+        "content": ""
     },
     "What about you": {
         "type": "text",
@@ -125,6 +109,6 @@
     },
     "Test response": {
         "type": "text",
-        "content": "lab-topology.drawio.png"
+        "content": "test text"
     }
 }

@@ -68,109 +68,159 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class NLPProcessor:
-    """Natural Language Processing helper class for Hinglish"""
+    """Enhanced Natural Language Processing helper class for Hinglish"""
 
     def __init__(self):
         self.initialize_nlp_tools()
 
     def initialize_nlp_tools(self):
-        """Initialize NLP tools for Hinglish"""
-        # Common Hinglish typos and slang
-        self.common_typos = {
-            'kya': 'kya', 'kyu': 'kyun', 'plz': 'please', 'pls': 'please',
-            'thx': 'thanks', 'sry': 'sorry', 'frnd': 'friend', 'bcoz': 'because',
-            'gud': 'good', 'hw': 'how', 'u': 'you', 'ur': 'your', 'r': 'are',
-            'h': 'hai', 'nahi': 'nahi', 'haan': 'haan', 'okie': 'ok', 'tm': 'tum',
-            'mujhe': 'mujhe', 'acha': 'acha', 'kaise': 'kaise', 'kese': 'kaise'
-        }
-        
-        # Hinglish stopwords (expand as needed)
-        self.stop_words = set([
-            'hai', 'ka', 'ki', 'ke', 'ko', 'se', 'me', 'mein', 'par', 'aur', 'ya', 'to', 'bhi', 'wo', 'woh', 'ye', 'yeh',
-            'the', 'is', 'are', 'was', 'were', 'a', 'an', 'and', 'or', 'but', 'if', 'so', 'of', 'on', 'in', 'for', 'with'
-        ])
-        
+        """Initialize enhanced NLP tools for Hinglish"""
+        # Load NLP configuration from file
+        try:
+            with open('nlp_config.json', 'r', encoding='utf-8') as f:
+                nlp_config = json.load(f)
+        except FileNotFoundError:
+            logger.warning("nlp_config.json not found, using default settings")
+            nlp_config = {
+                "nlp_enabled": True,
+                "common_typos": {},
+                "stop_words": [],
+                "phonetic_mappings": {}
+            }
+
+        # Load NLP enabled setting
+        self.nlp_enabled = nlp_config.get('nlp_enabled', True)
+
+        # Load common typos
+        self.common_typos = nlp_config.get('common_typos', {})
+
+        # Load stopwords
+        self.stop_words = set(nlp_config.get('stop_words', []))
+
+        # Load phonetic mappings
+        self.phonetic_mappings = nlp_config.get('phonetic_mappings', {})
+
         # No lemmatizer for Hinglish
         if SPELLCHECKER_AVAILABLE:
             self.spell = SpellChecker(language=None)  # Use generic, not English
-        
+
         if SKLEARN_AVAILABLE:
             self.vectorizer = None
 
     def preprocess_text(self, text):
         """
-        Preprocess Hinglish text:
+        Enhanced preprocessing for Hinglish text:
         - Lowercase
         - Remove punctuation
-        - Fix common typos
+        - Apply phonetic normalization
+        - Fix common typos and variations
         - Remove stopwords
         """
-        text = text.lower()
+        # Convert to lowercase
+        text = text.lower().strip()
+        
+        # Remove extra whitespace and punctuation
         text = re.sub(r'[^\w\s]', ' ', text)
+        text = re.sub(r'\s+', ' ', text)
+        
+        # Apply phonetic mappings for better matching
+        for phonetic, replacement in self.phonetic_mappings.items():
+            text = text.replace(phonetic, replacement)
+        
+        # Split into words and apply typo corrections
         words = text.split()
-        words = [self.common_typos.get(word, word) for word in words]
+        normalized_words = []
         
-        # Remove stopwords
-        tokens = [word for word in words if word not in self.stop_words]
-        processed_text = ' '.join(tokens)
+        for word in words:
+            # Apply typo corrections
+            corrected_word = self.common_typos.get(word, word)
+            
+            # Skip if it's a stopword
+            if corrected_word not in self.stop_words and len(corrected_word) > 1:
+                normalized_words.append(corrected_word)
         
-        # Spelling correction (optional, may not work well for Hinglish)
-        if SPELLCHECKER_AVAILABLE:
-            corrected_words = []
-            for word in processed_text.split():
-                if len(word) > 3 and word in self.spell.unknown([word]):
-                    corrected_words.append(self.spell.correction(word))
-                else:
-                    corrected_words.append(word)
-            processed_text = ' '.join(corrected_words)
+        processed_text = ' '.join(normalized_words)
+        
+        # Additional normalization for common Hinglish patterns
+        processed_text = self.normalize_hinglish_patterns(processed_text)
         
         return processed_text
+    
+    def normalize_hinglish_patterns(self, text):
+        """Apply additional Hinglish-specific normalizations"""
+        # Handle repeated characters (e.g., "hellooo" -> "hello")
+        text = re.sub(r'(.)\1{2,}', r'\1\1', text)
+        
+        # Normalize common Hinglish word endings
+        text = re.sub(r'\bkr\b', 'kar', text)  # kr -> kar
+        text = re.sub(r'\bho\b', 'hai', text)  # ho -> hai
+        text = re.sub(r'\bna\b', 'nahi', text)  # na -> nahi
+        
+        # Handle common contractions
+        text = re.sub(r'\bkya\s+kar\b', 'kya kar', text)
+        text = re.sub(r'\bkaise\s+ho\b', 'kaise hai', text)
+        
+        return text
 
-    def find_best_match(self, input_text, keywords, threshold=0.6):
+    def find_best_match(self, input_text, keywords, threshold=0.4):
         """
-        Find the best matching keyword for the input text
+        Enhanced matching for Hinglish text with multiple similarity methods
         Returns the matched keyword and the confidence score
         """
         # Preprocess input text
         processed_input = self.preprocess_text(input_text)
+        original_input = input_text.lower().strip()
         
-        # Use TF-IDF and cosine similarity if sklearn is available
-        if SKLEARN_AVAILABLE and self.vectorizer is not None:
-            # Transform input text
-            input_vector = self.vectorizer.transform([processed_input])
-            
-            # Calculate similarity with each keyword
-            best_match = None
-            best_score = 0
-            
-            for keyword in keywords:
-                # For multi-word keywords, compare similarity
-                keyword_vector = self.vectorizer.transform([keyword])
-                similarity = cosine_similarity(input_vector, keyword_vector)[0][0]
-                
-                if similarity > best_score:
-                    best_score = similarity
-                    best_match = keyword
-            
-            # Return match if score exceeds threshold
-            if best_score >= threshold:
-                return best_match, best_score
-        
-        # Fallback to simpler matching methods
         best_match = None
         best_score = 0
         
         for keyword in keywords:
-            # Check for direct containment
-            if keyword in processed_input:
+            processed_keyword = self.preprocess_text(keyword)
+            original_keyword = keyword.lower().strip()
+            
+            # Method 1: Direct containment (highest priority)
+            if processed_keyword in processed_input or processed_input in processed_keyword:
                 return keyword, 1.0
             
-            # Calculate string similarity
-            similarity = self.calculate_similarity(processed_input, keyword)
+            # Method 2: Word overlap similarity
+            word_overlap_score = self.calculate_word_overlap(processed_input, processed_keyword)
             
-            if similarity > best_score:
-                best_score = similarity
+            # Method 3: String similarity on processed text
+            processed_similarity = self.calculate_similarity(processed_input, processed_keyword)
+            
+            # Method 4: String similarity on original text
+            original_similarity = self.calculate_similarity(original_input, original_keyword)
+            
+            # Method 5: Phonetic similarity for Hinglish
+            phonetic_score = self.calculate_phonetic_similarity(processed_input, processed_keyword)
+            
+            # Combine scores with weights
+            combined_score = max(
+                word_overlap_score * 0.4,
+                processed_similarity * 0.3,
+                original_similarity * 0.2,
+                phonetic_score * 0.1
+            )
+            
+            if combined_score > best_score:
+                best_score = combined_score
                 best_match = keyword
+        
+        # Use TF-IDF if available and no good match found yet
+        if SKLEARN_AVAILABLE and self.vectorizer is not None and best_score < 0.7:
+            try:
+                input_vector = self.vectorizer.transform([processed_input])
+                
+                for keyword in keywords:
+                    processed_keyword = self.preprocess_text(keyword)
+                    keyword_vector = self.vectorizer.transform([processed_keyword])
+                    similarity = cosine_similarity(input_vector, keyword_vector)[0][0]
+                    
+                    if similarity > best_score:
+                        best_score = similarity
+                        best_match = keyword
+            except Exception as e:
+                logger.debug(f"TF-IDF matching failed: {e}")
         
         # Return match if score exceeds threshold
         if best_score >= threshold:
@@ -179,9 +229,44 @@ class NLPProcessor:
         return None, 0
     
     def calculate_similarity(self, text1, text2):
-        """Calculate similarity between two strings"""
-        # Simple sequence matcher
+        """Calculate similarity between two strings using sequence matcher"""
         return SequenceMatcher(None, text1, text2).ratio()
+    
+    def calculate_word_overlap(self, text1, text2):
+        """Calculate word overlap similarity"""
+        words1 = set(text1.split())
+        words2 = set(text2.split())
+        
+        if not words1 or not words2:
+            return 0.0
+        
+        intersection = words1.intersection(words2)
+        union = words1.union(words2)
+        
+        return len(intersection) / len(union) if union else 0.0
+    
+    def calculate_phonetic_similarity(self, text1, text2):
+        """Calculate phonetic similarity for Hinglish words"""
+        # Apply phonetic transformations
+        phonetic1 = self.apply_phonetic_transform(text1)
+        phonetic2 = self.apply_phonetic_transform(text2)
+        
+        return SequenceMatcher(None, phonetic1, phonetic2).ratio()
+    
+    def apply_phonetic_transform(self, text):
+        """Apply phonetic transformations for better Hinglish matching"""
+        # Convert common phonetic variations
+        transformations = {
+            'ph': 'f', 'gh': 'g', 'kh': 'k', 'th': 't', 'dh': 'd', 'bh': 'b',
+            'ch': 'c', 'sh': 's', 'zh': 'z', 'oo': 'u', 'aa': 'a', 'ee': 'i',
+            'v': 'w', 'w': 'v', 'z': 's', 's': 'z', 'x': 'ks'
+        }
+        
+        result = text
+        for original, replacement in transformations.items():
+            result = result.replace(original, replacement)
+        
+        return result
     
     def initialize_vectorizer(self, keywords):
         """Initialize TF-IDF vectorizer with keywords"""
@@ -350,7 +435,7 @@ class TelegramBot:
         Returns the best response for the given message_text:
         1. Exact match in responses
         2. Wildcard match in responses
-        3. NLP fuzzy match
+        3. NLP fuzzy match (only if NLP is enabled)
         """
         # 1. Exact match (case-insensitive)
         for key in self.responses:
@@ -363,12 +448,12 @@ class TelegramBot:
                 if fnmatch.fnmatch(message_text.strip().lower(), key.strip().lower()):
                     return self.responses[key], 'wildcard'
 
-        # 3. NLP fuzzy match
-        if hasattr(self, 'nlp') and self.nlp:
+        # 3. NLP fuzzy match (only if NLP is enabled)
+        if hasattr(self, 'nlp') and self.nlp and self.nlp.nlp_enabled:
             matched_keyword, confidence = self.nlp.find_best_match(
                 message_text,
                 list(self.responses.keys()),
-                threshold=0.6
+                threshold=0.4
             )
             if matched_keyword:
                 return self.responses[matched_keyword], 'nlp'

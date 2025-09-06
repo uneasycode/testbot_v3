@@ -4,7 +4,8 @@
         "content": [
             "Hi there!",
             "Hello! How can I help?",
-            "Hey, what's up?"
+            "Hey, what's up?",
+            "Namaste! How are you?"
         ]
     },
     "bye": {
@@ -49,6 +50,13 @@
         "type": "text",
         "content": [
             "no blunders"
+        ]
+    },
+    "namaste": {
+        "type": "text",
+        "content": [
+            "Namaste! How can I help you?",
+            "Namaste ji! How are you?"
         ]
     }
 }

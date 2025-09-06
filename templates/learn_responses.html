@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn from Conversations - Telegram Bot Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
+        .learning-section { margin-bottom: 2rem; }
+        .stats-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .progress-bar { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+        .conversation-item { border-left: 4px solid #007bff; padding-left: 1rem; margin-bottom: 1rem; }
+        .learned-response { background-color: #e8f5e8; border-left: 4px solid #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h2 class="mb-0">
+                                <i class="fas fa-brain me-2"></i>Learn from Conversations
+                            </h2>
+                            <a href="{{ url_for('index') }}" class="btn btn-light">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            Analyze conversation data to generate potential responses. The system will learn patterns from user interactions and create suggestions for new responses.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stats-card text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-comments fa-2x mb-2"></i>
+                        <h4 id="totalConversations">-</h4>
+                        <p class="mb-0">Total Conversations</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-reply fa-2x mb-2"></i>
+                        <h4 id="answeredConversations">-</h4>
+                        <p class="mb-0">Answered</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-question-circle fa-2x mb-2"></i>
+                        <h4 id="unansweredConversations">-</h4>
+                        <p class="mb-0">Unanswered</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-lightbulb fa-2x mb-2"></i>
+                        <h4 id="learnedResponses">-</h4>
+                        <p class="mb-0">Learned Responses</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Control -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card learning-section">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>Learning Process
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="mb-3">Click the button below to analyze conversations and generate potential responses.</p>
+                                <div class="progress mb-3" id="learningProgress" style="display: none;">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <div id="learningStatus" class="alert alert-info" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>Analyzing conversations...
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button type="button" class="btn btn-primary btn-lg" id="learnBtn" onclick="startLearning()">
+                                    <i class="fas fa-graduation-cap me-2"></i>Start Learning
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card" id="resultsCard" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Learning Results
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="resultsContent">
+                            <!-- Results will be loaded here -->
+                        </div>
+                        <div class="text-center mt-4">
+                            <a href="{{ url_for('review_responses') }}" class="btn btn-success btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>Review & Select Responses
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample Conversations Preview -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-eye me-2"></i>Sample Conversations
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="conversationsPreview">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading conversation preview...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let learningInProgress = false;
+
+        // Load initial data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConversationStats();
+            loadConversationPreview();
+        });
+
+        function loadConversationStats() {
+            fetch('/api/learning/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalConversations').textContent = data.total || 0;
+                    document.getElementById('answeredConversations').textContent = data.answered || 0;
+                    document.getElementById('unansweredConversations').textContent = data.unanswered || 0;
+                    document.getElementById('learnedResponses').textContent = data.learned || 0;
+                })
+                .catch(error => {
+                    console.error('Error loading stats:', error);
+                });
+        }
+
+        function loadConversationPreview() {
+            fetch('/api/conversations/preview')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('conversationsPreview');
+                    if (data.conversations && data.conversations.length > 0) {
+                        let html = '';
+                        data.conversations.slice(0, 5).forEach(conv => {
+                            const hasResponse = conv.response && conv.response.content && conv.response.content.trim();
+                            html += `
+                                <div class="conversation-item ${hasResponse ? 'learned-response' : ''}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong>User:</strong> ${conv.input}
+                                            ${hasResponse ? `<br><strong>Bot:</strong> ${conv.response.content}` : '<br><em class="text-muted">No response</em>'}
+                                        </div>
+                                        <span class="badge ${hasResponse ? 'bg-success' : 'bg-warning'}">
+                                            ${hasResponse ? 'Answered' : 'Unanswered'}
+                                        </span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<p class="text-muted">No conversations found.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading preview:', error);
+                    document.getElementById('conversationsPreview').innerHTML = '<p class="text-muted">Error loading conversations.</p>';
+                });
+        }
+
+        function startLearning() {
+            if (learningInProgress) return;
+
+            learningInProgress = true;
+            const learnBtn = document.getElementById('learnBtn');
+            const progressBar = document.getElementById('learningProgress');
+            const statusAlert = document.getElementById('learningStatus');
+
+            // Update UI
+            learnBtn.disabled = true;
+            learnBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Learning...';
+            progressBar.style.display = 'block';
+            statusAlert.style.display = 'block';
+
+            // Start learning process
+            fetch('/api/learning/start', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Simulate progress
+                    let progress = 0;
+                    const interval = setInterval(() => {
+                        progress += Math.random() * 15;
+                        if (progress >= 100) {
+                            progress = 100;
+                            clearInterval(interval);
+                            learningComplete(data);
+                        }
+                        progressBar.querySelector('.progress-bar').style.width = progress + '%';
+                    }, 200);
+                } else {
+                    throw new Error(data.error || 'Learning failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                learningError(error.message);
+            });
+        }
+
+        function learningComplete(data) {
+            learningInProgress = false;
+            const learnBtn = document.getElementById('learnBtn');
+            const progressBar = document.getElementById('learningProgress');
+            const statusAlert = document.getElementById('learningStatus');
+            const resultsCard = document.getElementById('resultsCard');
+
+            // Update UI
+            learnBtn.disabled = false;
+            learnBtn.innerHTML = '<i class="fas fa-graduation-cap me-2"></i>Start Learning';
+            progressBar.style.display = 'none';
+            statusAlert.style.display = 'none';
+
+            // Show results
+            const resultsContent = document.getElementById('resultsContent');
+            resultsContent.innerHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle me-2"></i>Learning Complete!</h5>
+                    <p>Successfully analyzed conversations and generated ${data.learned_count || 0} potential responses.</p>
+                    <ul>
+                        <li><strong>Conversations analyzed:</strong> ${data.total_conversations || 0}</li>
+                        <li><strong>Responses learned:</strong> ${data.learned_count || 0}</li>
+                        <li><strong>Unanswered questions:</strong> ${data.unanswered_count || 0}</li>
+                    </ul>
+                </div>
+            `;
+            resultsCard.style.display = 'block';
+
+            // Refresh stats
+            loadConversationStats();
+        }
+
+        function learningError(message) {
+            learningInProgress = false;
+            const learnBtn = document.getElementById('learnBtn');
+            const progressBar = document.getElementById('learningProgress');
+            const statusAlert = document.getElementById('learningStatus');
+
+            learnBtn.disabled = false;
+            learnBtn.innerHTML = '<i class="fas fa-graduation-cap me-2"></i>Start Learning';
+            progressBar.style.display = 'none';
+            statusAlert.className = 'alert alert-danger';
+            statusAlert.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>' + message;
+        }
+    </script>
+</body>
+</html>

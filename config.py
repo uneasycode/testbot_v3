@@ -22,6 +22,7 @@ DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RESPONSES_FILE = os.path.join(BASE_DIR, 'responses.json')
 CONVERSATION_FILE = os.path.join(BASE_DIR, 'conversation.json')
+NLP_CONFIG_FILE = os.path.join(BASE_DIR, 'nlp_config.json')
 MEDIA_DIR = os.path.join(BASE_DIR, 'media')
 IMAGES_DIR = os.path.join(MEDIA_DIR, 'images')
 AUDIO_DIR = os.path.join(MEDIA_DIR, 'audio')

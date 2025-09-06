@@ -1,0 +1,255 @@
+{
+    "hello": {
+        "type": "text",
+        "content": [
+            "Hey, what's up?",
+            "Hi there!",
+            "Hello! How can I help?"
+        ],
+        "confidence": 2,
+        "source": "learned",
+        "similar_inputs": [
+            "hello",
+            "hello"
+        ]
+    },
+    "bye": {
+        "type": "text",
+        "content": [
+            "Goodbye!"
+        ],
+        "confidence": 1,
+        "source": "learned",
+        "similar_inputs": [
+            "bye"
+        ]
+    },
+    "what do you mean": {
+        "type": "text",
+        "content": [
+            "I mean nothing"
+        ],
+        "confidence": 1,
+        "source": "learned",
+        "similar_inputs": [
+            "what do you mean"
+        ]
+    },
+    "aap hello bol sakte ho": {
+        "type": "text",
+        "content": [
+            "haan"
+        ],
+        "confidence": 1,
+        "source": "learned",
+        "similar_inputs": [
+            "aap hello bol sakte ho"
+        ]
+    },
+    "help me": {
+        "type": "text",
+        "content": [
+            "Hi there!"
+        ],
+        "confidence": 1,
+        "source": "learned",
+        "similar_inputs": [
+            "help me"
+        ]
+    },
+    "what about you": {
+        "type": "text",
+        "content": [
+            "I mean nothing"
+        ],
+        "confidence": 1,
+        "source": "learned",
+        "similar_inputs": [
+            "what about you"
+        ]
+    },
+    "blunder ho gaya": {
+        "type": "text",
+        "content": [
+            "no blunders"
+        ],
+        "confidence": 1,
+        "source": "learned",
+        "similar_inputs": [
+            "blunder ho gaya"
+        ]
+    },
+    "test response": {
+        "type": "text",
+        "content": [
+            "test text"
+        ],
+        "confidence": 1,
+        "source": "learned",
+        "similar_inputs": [
+            "test response"
+        ]
+    },
+    "hi (unanswered)": {
+        "type": "text",
+        "content": [
+            "I'm not sure how to respond to that yet."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "kya baat hai (unanswered)": {
+        "type": "text",
+        "content": [
+            "Let me learn how to answer this better."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "baat kyu nahi karte (unanswered)": {
+        "type": "text",
+        "content": [
+            "This seems like something I should know how to respond to."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "ye baat (unanswered)": {
+        "type": "text",
+        "content": [
+            "I'll work on improving my responses for this type of question."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "are you (unanswered)": {
+        "type": "text",
+        "content": [
+            "I'm not sure how to respond to that yet."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "are you here (unanswered)": {
+        "type": "text",
+        "content": [
+            "Let me learn how to answer this better."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "who are you (unanswered)": {
+        "type": "text",
+        "content": [
+            "This seems like something I should know how to respond to."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "jjene (unanswered)": {
+        "type": "text",
+        "content": [
+            "I'll work on improving my responses for this type of question."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "agla paagal ho rakha hai (unanswered)": {
+        "type": "text",
+        "content": [
+            "I'm not sure how to respond to that yet."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "aap kya kar rhe ho? (unanswered)": {
+        "type": "text",
+        "content": [
+            "Let me learn how to answer this better."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "kuch toh reply do bhai (unanswered)": {
+        "type": "text",
+        "content": [
+            "This seems like something I should know how to respond to."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "are you crazy (unanswered)": {
+        "type": "text",
+        "content": [
+            "I'll work on improving my responses for this type of question."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "arre bhai naam kya hai aapka? (unanswered)": {
+        "type": "text",
+        "content": [
+            "I'm not sure how to respond to that yet."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "tum theek ho (unanswered)": {
+        "type": "text",
+        "content": [
+            "Let me learn how to answer this better."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "shabaash (unanswered)": {
+        "type": "text",
+        "content": [
+            "This seems like something I should know how to respond to."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "jebsjndnd (unanswered)": {
+        "type": "text",
+        "content": [
+            "I'll work on improving my responses for this type of question."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "trying to understand this better (unanswered)": {
+        "type": "text",
+        "content": [
+            "I'm not sure how to respond to that yet."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    },
+    "abhi toh jugaad se theek karna padega (unanswered)": {
+        "type": "text",
+        "content": [
+            "Let me learn how to answer this better."
+        ],
+        "confidence": 1,
+        "source": "unanswered_suggestion",
+        "needs_review": true
+    }
+}

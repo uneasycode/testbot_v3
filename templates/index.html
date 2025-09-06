@@ -59,10 +59,40 @@
                                 </p>
                             </div>
                             <div class="col-md-4 text-end">
-                                <a href="{{ url_for('add_response_form') }}" class="btn btn-primary">
-                                    <i class="fas fa-plus me-2"></i>Add New Response
+                                <a href="{{ url_for('nlp_config_page') }}" class="btn btn-info">
+                                    <i class="fas fa-brain me-2"></i>NLP Config
                                 </a>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3">
+                            <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                        </h6>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{{ url_for('add_response_form') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add Response
+                            </a>
+                            <a href="{{ url_for('learn_responses_page') }}" class="btn btn-success">
+                                <i class="fas fa-graduation-cap me-2"></i>Learn from Conversations
+                            </a>
+                            <a href="{{ url_for('review_responses') }}" class="btn btn-warning">
+                                <i class="fas fa-check-circle me-2"></i>Review Learned Responses
+                            </a>
+                            <a href="{{ url_for('nlp_config_page') }}" class="btn btn-info">
+                                <i class="fas fa-brain me-2"></i>NLP Config
+                            </a>
+                            <button class="btn btn-outline-secondary" onclick="location.reload()">
+                                <i class="fas fa-sync me-1"></i>Refresh
+                            </button>
                         </div>
                     </div>
                 </div>
